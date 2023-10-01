@@ -1,5 +1,6 @@
 package com.wefox.payment.config;
 
+import com.wefox.payment.dto.PaymentDTO;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.StringDeserializer;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +12,7 @@ import org.springframework.kafka.config.KafkaListenerContainerFactory;
 import org.springframework.kafka.core.ConsumerFactory;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.listener.ConcurrentMessageListenerContainer;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -42,19 +44,23 @@ class KafkaConsumerConfig {
         );
         props.put(
                 ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG,
-                StringDeserializer.class
+                JsonDeserializer.class
         );
         return props;
     }
 
     @Bean
-    public ConsumerFactory<String, String> consumerFactory() {
-        return new DefaultKafkaConsumerFactory<>(consumerConfigs());
+    public ConsumerFactory<String, PaymentDTO> consumerFactory() {
+        return new DefaultKafkaConsumerFactory<>(
+                consumerConfigs(),
+                new StringDeserializer(),
+                new JsonDeserializer<>(PaymentDTO.class)
+        );
     }
 
     @Bean
-    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, String>> kafkaListenerContainerFactory() {
-        ConcurrentKafkaListenerContainerFactory<String, String> factory =
+    public KafkaListenerContainerFactory<ConcurrentMessageListenerContainer<String, PaymentDTO>> kafkaListenerContainerFactory() {
+        ConcurrentKafkaListenerContainerFactory<String, PaymentDTO> factory =
                 new ConcurrentKafkaListenerContainerFactory<>();
         factory.setConsumerFactory(consumerFactory());
         return factory;
